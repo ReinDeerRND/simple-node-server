@@ -22,27 +22,22 @@
   import fs from 'fs' //file-system, for reading html pages
 
   const server = createServer((req, res)=>{
+
+    const sendResponse =  (err, data) =>{
+      if(err) {
+        res.write("500: File could not be ridden")
+      } else {
+        res.write(data)
+      }
+       res.end()
+    }
+
     switch (req.url){
       case "/":
-         fs.readFile('pages/index.html', (err, data)=>{
-          if(err) {
-            res.write("500: File could not be ridden")
-          } else {
-            res.write(data)
-          }
-           res.end()
-         })
-       
+         fs.readFile('pages/index.html', sendResponse)
         break;
       case "/contacts":
-        fs.readFile('pages/contacts.html', (err, data)=>{
-          if(err) {
-            res.write("500: File could not be ridden")
-          } else {
-            res.write(data)
-          }
-           res.end()
-         })
+        fs.readFile('pages/contacts.html', sendResponse)
         break;
       default:
         res.write("404: Not found dinosaurs")

@@ -1,17 +1,4 @@
 
-// const express = require('express')
-// const app = express()
-// const port = process.env.PORT || 4000;
-
-// app.get('/', (req, res) => {
-//   console.log(`Environment variable is  any`)
-//   res.send('Hello World!  Hello,  Docker!')
-// })
-
-// app.listen(port, () => {
-//   console.log(`Example app listening on port ${port}`)
-// })
-
 //**
 // SIMPLE HTTP SERVER
 // const http = require('http')

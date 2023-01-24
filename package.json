@@ -3,11 +3,26 @@
     "version": "1.0.0",
     "main": "server.js",
     "scripts": {
+        "start": "node ./dist/server",
+        "watch": "nodemon ./dist/server",
+        "watch-tsc": "tsc -w",
+        "start-express-js": "node express-server",
+        "watch-express-js": "nodemon express-server",
+        "debug-express-js": "nodemon --inspect express-server",
+        "start-http": "node http-server",
+        "watch-http": "nodemon http-server",
+        "debug-http": "nodemon --inspect http-server",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "Elina Popeluna",
     "dependencies": {
         "express": "^4.18.2"
     },
-    "type": "module"
+    "devDependencies": {
+        "@types/express": "^4.17.15",
+        "@types/node": "^18.11.18",
+        "nodemon": "^2.0.20",
+        "ts-node": "^10.9.1",
+        "typescript": "^4.9.4"
+    }
 }

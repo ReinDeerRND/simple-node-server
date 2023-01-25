@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "main": "server.js",
     "scripts": {
-        "start": "node ./dist/server",
-        "watch": "nodemon ./dist/server",
+        "start": "node ./dist/src/server",
+        "watch": "nodemon ./dist/src/server",
         "watch-tsc": "tsc -w",
         "start-express-js": "node express-server",
         "watch-express-js": "nodemon express-server",

@@ -1,6 +1,6 @@
-import { DinosaurType, Period } from "../src/models";
+import { DBType, Period } from "../src/models";
 
-export const db: { dinosaurs: DinosaurType[] } = {
+export const db: DBType = {
   dinosaurs: [
     {
       id: 0,

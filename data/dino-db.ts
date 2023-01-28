@@ -1,4 +1,4 @@
-import { DBType, Period } from "../src/models";
+import { DBType, Period } from "../src/models/dinosaur.models";
 
 export const db: DBType = {
   dinosaurs: [

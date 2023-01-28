@@ -1,7 +1,16 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { db } from "../data/dino-db";
+import { DinosaurType } from "./models/dinosaur.models";
+import { HTTP_STATUS } from "./models/http-codes.model";
+import {
+  RequestWithBody,
+  RequestWithBodyAndParams,
+  RequestWithParams,
+  RequestWithQueryParams,
+  SearchParamsType,
+} from "./models/request.types";
 
-const app = express();
+export const app = express();
 const port = process.env.PORT || 4000;
 
 //middleware - программы, которые выполняются до коллбек-функции (req,res) =>{...}
@@ -12,59 +21,77 @@ app.get("/", (req, res) => {
   res.send({ title: "Hello World!" });
 });
 
-app.get("/dinos", (req, res) => {
-  let dinos = db.dinosaurs;
-  if (req.query.name) {
-    dinos = dinos.filter(
-      (dino) => dino.name.indexOf(req.query.name as string) > -1
-    );
+app.get(
+  "/dinos",
+  (
+    req: RequestWithQueryParams<SearchParamsType>,
+    res: Response<DinosaurType[]>
+  ) => {
+    let dinos = db.dinosaurs;
+    if (!dinos) {
+      res.sendStatus(HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      return;
+    }
+    if (req.query.name) {
+      dinos = dinos.filter((dino) => dino.name.indexOf(req.query.name) > -1);
+    }
+    if (req.query.minWeight) {
+      dinos = dinos.filter((dino) => {
+        if (dino.weight) {
+          return dino.weight >= +req.query.minWeight;
+        }
+        return false;
+      });
+    }
+    if (req.query.maxWeight) {
+      dinos = dinos.filter((dino) => {
+        if (dino.weight) {
+          return dino.weight <= +req.query.maxWeight;
+        }
+        return false;
+      });
+    }
+    res.status(HTTP_STATUS.OK).json(dinos);
+    //res.send(dinos) // слишком универсальный метод
+    // res.sendStatus(400) // отправляем код ответа
   }
-  if (req.query.minWeight) {
-    dinos = dinos.filter((dino) => {
-      if (dino.weight) {
-        return dino.weight >= +(req.query.minWeight as string);
-      }
-      return false;
-    });
-  }
-  if (req.query.maxWeight) {
-    dinos = dinos.filter((dino) => {
-      if (dino.weight) {
-        return dino.weight <= +(req.query.maxWeight as string);
-      }
-      return false;
-    });
-  }
-  res.json(dinos);
-  //res.send(dinos) // слишком универсальный метод
-  // res.sendStatus(400) // отправляем код ответа
-});
+);
 
-app.get("/dinos/count", (req, res) => {
-  res.json({count: db.dinosaurs.length});
-});
-
-app.get("/dinos/:id", (req, res) => {
-  let foundedDino = db.dinosaurs.find((d) => d.id === +req.params.id);
-  if (!foundedDino) {
-    res.sendStatus(404);
+app.get("/dinos/count", (req: Request, res: Response<{ count: number }>) => {
+  if (!db.dinosaurs) {
+    res.sendStatus(HTTP_STATUS.INTERNAL_SERVER_ERROR);
     return;
   }
-  res.json(foundedDino);
+  res.json({ count: db.dinosaurs.length });
 });
 
-
-
-app.post("/dinos", (req, res) => {
-  if (!req.body.name) {
-    res.sendStatus(400);
-    return;
+app.get(
+  "/dinos/:id",
+  (req: RequestWithParams<{ id: string }>, res: Response<DinosaurType>) => {
+    let foundedDino = db.dinosaurs.find((d) => d.id === +req.params.id);
+    if (!foundedDino) {
+      res.sendStatus(HTTP_STATUS.NOT_FOUND);
+      return;
+    }
+    res.json(foundedDino);
   }
-  const newDinosaur = {
-    id: db.dinosaurs.length,
-    ...req.body,
-  };
-  /** команда для отправки в консоли 
+);
+
+app.post(
+  "/dinos",
+  (
+    req: RequestWithBody<Omit<DinosaurType, "id">>,
+    res: Response<DinosaurType>
+  ) => {
+    if (!req.body.name) {
+      res.sendStatus(HTTP_STATUS.BAD_REQUEST);
+      return;
+    }
+    const newDinosaur = {
+      id: db.dinosaurs.length,
+      ...req.body,
+    };
+    /** команда для отправки в консоли 
   fetch("http://localhost:4000/dinos", {
     method: "post",
     body: JSON.stringify({ name: "Another dino", length: 4 }),
@@ -72,24 +99,32 @@ app.post("/dinos", (req, res) => {
   }).then(res => res.json()).then(json=>console.log(json));
   */
 
-  db.dinosaurs.push(newDinosaur);
-  res.status(201).json(newDinosaur);
-});
-
-app.put("/dinos/:id", (req, res) => {
-  let foundedDino = db.dinosaurs.find((d) => d.id === +req.params.id);
-  if (!foundedDino) {
-    res.sendStatus(404);
-    return;
+    db.dinosaurs.push(newDinosaur);
+    res.status(HTTP_STATUS.CREATED).json(newDinosaur);
   }
-  let updatedDino = {
-    ...foundedDino,
-    ...req.body,
-  };
+);
 
-  db.dinosaurs = db.dinosaurs.map(d =>d.id === +req.params.id? updatedDino : d)
+app.put(
+  "/dinos/:id",
+  (
+    req: RequestWithBodyAndParams<Omit<DinosaurType, "id">, { id: string }>,
+    res: Response<DinosaurType>
+  ) => {
+    let foundedDino = db.dinosaurs.find((d) => d.id === +req.params.id);
+    if (!foundedDino) {
+      res.sendStatus(HTTP_STATUS.NOT_FOUND);
+      return;
+    }
+    let updatedDino = {
+      ...foundedDino,
+      ...req.body,
+    };
 
-  /** команда для отправки в консоли 
+    db.dinosaurs = db.dinosaurs.map((d) =>
+      d.id === +req.params.id ? updatedDino : d
+    );
+
+    /** команда для отправки в консоли 
   fetch("http://localhost:4000/dinos/1", {
     method: "put",
     body: JSON.stringify({ name: "Another dino", length: 4 }),
@@ -97,22 +132,31 @@ app.put("/dinos/:id", (req, res) => {
   }).then(res => res.json()).then(json=>console.log(json));
   */
 
-  res.status(201).json(updatedDino);
-});
-
-app.delete("/dinos/:id", (req, res) => {
-  let foundedDino = db.dinosaurs.find((d) => d.id === +req.params.id);
-  if (!foundedDino) {
-    res.sendStatus(400);
-    return;
+    res.status(HTTP_STATUS.OK).json(updatedDino);
   }
-  db.dinosaurs = db.dinosaurs.filter((d) => d.id !== +req.params.id)
-  
-  res.status(200).json(foundedDino);
+);
 
-  // fetch("http://localhost:4000/dinos/8", {
-  //   method: "delete",
-  // }).then(res => res.json()).then(json=>console.log(json));
+app.delete(
+  "/dinos/:id",
+  (req: RequestWithParams<{ id: string }>, res: Response<DinosaurType>) => {
+    let foundedDino = db.dinosaurs.find((d) => d.id === +req.params.id);
+    if (!foundedDino) {
+      res.sendStatus(HTTP_STATUS.BAD_REQUEST);
+      return;
+    }
+    db.dinosaurs = db.dinosaurs.filter((d) => d.id !== +req.params.id);
+
+    res.status(HTTP_STATUS.OK).json(foundedDino);
+
+    // fetch("http://localhost:4000/dinos/8", {
+    //   method: "delete",
+    // }).then(res => res.json()).then(json=>console.log(json));
+  }
+);
+
+app.delete("/_test_/data", (req, res) => {
+  db.dinosaurs = [];
+  res.sendStatus(HTTP_STATUS.NO_CONTENT);
 });
 
 app.listen(port, () => {

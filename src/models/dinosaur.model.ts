@@ -1,7 +1,3 @@
-export type DBType = {
-  dinosaurs: DinosaurType[];
-};
-
 export type DinosaurType = {
   id: number;
   name: string;

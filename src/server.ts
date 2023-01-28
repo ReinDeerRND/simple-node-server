@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { db } from "../data/dino-db";
-import { DinosaurType } from "./models/dinosaur.models";
+import { DBItemType } from "./models/db.model";
+import { DinosaurType } from "./models/dinosaur.model";
 import { HTTP_STATUS } from "./models/http-codes.model";
 import {
   RequestWithBody,
@@ -9,6 +10,7 @@ import {
   RequestWithQueryParams,
   SearchParamsType,
 } from "./models/request.types";
+import { convertFromDBtoAPItype } from "./utils/convert.service";
 
 export const app = express();
 const port = process.env.PORT || 4000;
@@ -16,6 +18,10 @@ const port = process.env.PORT || 4000;
 //middleware - программы, которые выполняются до коллбек-функции (req,res) =>{...}
 const jsonParseMiddleware = express.json();
 app.use(jsonParseMiddleware);
+
+// app.get("/", (req, res) => {
+//   res.send(db.dinosaurs);
+// });
 
 app.get("/", (req, res) => {
   res.send({ title: "Hello World!" });
@@ -27,7 +33,7 @@ app.get(
     req: RequestWithQueryParams<SearchParamsType>,
     res: Response<DinosaurType[]>
   ) => {
-    let dinos = db.dinosaurs;
+    let dinos = db.dinosaurs.map(convertFromDBtoAPItype);
     if (!dinos) {
       res.sendStatus(HTTP_STATUS.INTERNAL_SERVER_ERROR);
       return;
@@ -68,12 +74,14 @@ app.get("/dinos/count", (req: Request, res: Response<{ count: number }>) => {
 app.get(
   "/dinos/:id",
   (req: RequestWithParams<{ id: string }>, res: Response<DinosaurType>) => {
-    let foundedDino = db.dinosaurs.find((d) => d.id === +req.params.id);
+    let foundedDino: DBItemType | undefined = db.dinosaurs.find(
+      (d) => d.id === +req.params.id
+    );
     if (!foundedDino) {
       res.sendStatus(HTTP_STATUS.NOT_FOUND);
       return;
     }
-    res.json(foundedDino);
+    res.json(convertFromDBtoAPItype(foundedDino));
   }
 );
 
@@ -87,8 +95,9 @@ app.post(
       res.sendStatus(HTTP_STATUS.BAD_REQUEST);
       return;
     }
-    const newDinosaur = {
+    const newDinosaur: DBItemType = {
       id: db.dinosaurs.length,
+      created: new Date(),
       ...req.body,
     };
     /** команда для отправки в консоли 
@@ -100,7 +109,7 @@ app.post(
   */
 
     db.dinosaurs.push(newDinosaur);
-    res.status(HTTP_STATUS.CREATED).json(newDinosaur);
+    res.status(HTTP_STATUS.CREATED).json(convertFromDBtoAPItype(newDinosaur));
   }
 );
 
@@ -118,6 +127,7 @@ app.put(
     let updatedDino = {
       ...foundedDino,
       ...req.body,
+      edited: new Date(),
     };
 
     db.dinosaurs = db.dinosaurs.map((d) =>
@@ -125,14 +135,14 @@ app.put(
     );
 
     /** команда для отправки в консоли 
-  fetch("http://localhost:4000/dinos/1", {
-    method: "put",
-    body: JSON.stringify({ name: "Another dino", length: 4 }),
-    headers: { "content-type": "application/json" },
-  }).then(res => res.json()).then(json=>console.log(json));
-  */
+      fetch("http://localhost:4000/dinos/1", {
+        method: "put",
+        body: JSON.stringify({ name: "Another dino", length: 4 }),
+        headers: { "content-type": "application/json" },
+      }).then(res => res.json()).then(json=>console.log(json));
+    */
 
-    res.status(HTTP_STATUS.OK).json(updatedDino);
+    res.status(HTTP_STATUS.OK).json(convertFromDBtoAPItype(updatedDino));
   }
 );
 
@@ -146,14 +156,19 @@ app.delete(
     }
     db.dinosaurs = db.dinosaurs.filter((d) => d.id !== +req.params.id);
 
-    res.status(HTTP_STATUS.OK).json(foundedDino);
+    res.status(HTTP_STATUS.OK).json(convertFromDBtoAPItype(foundedDino));
 
-    // fetch("http://localhost:4000/dinos/8", {
-    //   method: "delete",
-    // }).then(res => res.json()).then(json=>console.log(json));
+    /**
+      fetch("http://localhost:4000/dinos/3", {
+      method: "delete",
+      }).then(res => res.json()).then(json=>console.log(json));
+    */
   }
 );
 
+/**
+ * for testing
+ */
 app.delete("/_test_/data", (req, res) => {
   db.dinosaurs = [];
   res.sendStatus(HTTP_STATUS.NO_CONTENT);

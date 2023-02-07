@@ -4,3 +4,5 @@ Dockerfile
 Makefile
 package-lock.json
 .dockerignore
+.vscode
+dist

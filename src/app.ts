@@ -10,11 +10,6 @@ export const app = express();
 const jsonParseMiddleware = express.json();
 app.use(jsonParseMiddleware);
 
-const RootRouter = getRootRouter(db);
-app.use("/", RootRouter);
-
-const DinosaurRouter = getDinosaurRouter(db);
-app.use("/dinos", DinosaurRouter);
-
-const TestRouter = getTestRouter(db);
-app.use("/_test_", TestRouter);
+app.use("/", getRootRouter(db));
+app.use("/dinos", getDinosaurRouter(db));
+app.use("/_test_", getTestRouter(db));

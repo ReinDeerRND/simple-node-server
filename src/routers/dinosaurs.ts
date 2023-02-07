@@ -60,6 +60,7 @@ export const getDinosaurRouter = (db: DBType) => {
 
   router.get(
     "/:id",
+    //"/:id([0-9]+)", //regexp на uri параметр (в данном примере - только число)
     (req: RequestWithParams<{ id: string }>, res: Response<DinosaurType>) => {
       let foundedDino: DBItemType | undefined = db.dinosaurs.find(
         (d) => d.id === +req.params.id

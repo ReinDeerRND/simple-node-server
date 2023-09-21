@@ -3,8 +3,9 @@
     "version": "1.0.0",
     "main": "server.js",
     "scripts": {
-        "start": "node ./dist/src/index",
-        "watch": "nodemon --inspect ./dist/src/index",
+        "build": "tsc",
+        "start": "node ./dist/index.js",
+        "watch": "nodemon --inspect ./dist/index",
         "watch-tsc": "tsc -w",
         "start-express-js": "node express-server",
         "watch-express-js": "nodemon express-server",

@@ -4,7 +4,7 @@
     "main": "server.js",
     "scripts": {
         "start": "node ./dist/src/index",
-        "watch": "nodemon ./dist/src/index",
+        "watch": "nodemon --inspect ./dist/src/index",
         "watch-tsc": "tsc -w",
         "start-express-js": "node express-server",
         "watch-express-js": "nodemon express-server",

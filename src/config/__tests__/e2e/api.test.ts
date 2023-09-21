@@ -1,6 +1,6 @@
 import request from "supertest";
-import { HTTP_STATUS } from "../../../src/models/http-codes.model";
-import { app } from "../../../src/app";
+import { HTTP_STATUS } from "../../../app/models/http-codes.model";
+import { app } from "../../../app/app";
 
 describe("/dinos", () => {
   beforeAll(async () => {
